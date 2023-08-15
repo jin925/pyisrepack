@@ -349,13 +349,14 @@ class PyInstArchive:
 
     def _readPyc(self, filename):
         with open(filename, 'rb') as pycFile:
-            pycFile.seek(4, os.SEEK_SET)
+            pycFile.seek(4, os.SEEK_SET) # seek magic number
             if self.pymaj >= 3 and self.pymin >= 7:                # PEP 552 -- Deterministic pycs
-                pycFile.seek(8, os.SEEK_CUR)
+                pycFile.seek(4, os.SEEK_CUR) #seek \0x00\0x00\0x00\0x00
+                pycFile.seek(8, os.SEEK_CUR) #seek time and size
             else:
-                pycFile.seek(4, os.SEEK_CUR)
+                pycFile.seek(4, os.SEEK_CUR) #seek time
                 if self.pymaj >= 3 and self.pymin >= 3:
-                    pycFile.seek(4, os.SEEK_CUR)
+                    pycFile.seek(4, os.SEEK_CUR) #seek size
 
             data = pycFile.read()
         return data
@@ -366,14 +367,12 @@ class PyInstArchive:
         fileName,_ = os.path.splitext(fileName)
 
         findEntry = None
-        newTocList = copy.deepcopy(self.tocList)
-
+        newTocList = copy.deepcopy(self.tocList)        
         for index in range(len(self.tocList)):
             _, fname = os.path.split(self.tocList[index].name)
             if fileName == fname:
                 setattr(self.tocList[index], "replaceFlag", 1)
                 break
-
         for index in range(len(newTocList)):
             _, fname = os.path.split(newTocList[index].name)
             if fileName == fname:
